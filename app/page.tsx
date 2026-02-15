@@ -12,11 +12,13 @@ import { TareasPage } from "@/components/tareas-page"
 import { ClientesPage } from "@/components/clientes-page"
 import { MiPanelPage } from "@/components/mi-panel-page"
 import { TiemposPage } from "@/components/tiempos-page"
+import { ProjectDetailPage } from "@/components/project-detail-page"
+import { TaskDetailPage } from "@/components/task-detail-page"
 
 import { NotificationsPage } from "@/components/notifications-page"
 
 function AppContent() {
-  const { isLoggedIn, currentPage, setSidebarOpen } = useApp()
+  const { isLoggedIn, currentView, setSidebarOpen } = useApp()
 
   if (!isLoggedIn) {
     return <LoginPage />
@@ -30,6 +32,8 @@ function AppContent() {
     "mi-panel": <MiPanelPage />,
     tiempos: <TiemposPage />,
     notificaciones: <NotificationsPage />,
+    "project-detail": <ProjectDetailPage id={currentView.params?.id} />,
+    "task-detail": <TaskDetailPage id={currentView.params?.id} />,
   }
 
   const pageTitles: Record<string, string> = {
@@ -40,6 +44,8 @@ function AppContent() {
     "mi-panel": "Mi Panel",
     tiempos: "Tiempos",
     notificaciones: "Notificaciones",
+    "project-detail": "Detalles del Proyecto",
+    "task-detail": "Detalles de Tarea",
   }
 
   return (
@@ -57,10 +63,10 @@ function AppContent() {
             <Menu className="h-5 w-5" />
             <span className="sr-only">Abrir menu</span>
           </Button>
-          <h2 className="font-semibold">{pageTitles[currentPage] || "LexPro"}</h2>
+          <h2 className="font-semibold">{currentView.title || pageTitles[currentView.name] || "LexPro"}</h2>
         </header>
         <div className="p-4 lg:p-8">
-          {pageMap[currentPage] || <DashboardPage />}
+          {pageMap[currentView.name] || <DashboardPage />}
         </div>
       </main>
     </div>

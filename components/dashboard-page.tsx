@@ -115,7 +115,7 @@ function ProjectRow({ project }: { project: Project }) {
 }
 
 export function DashboardPage() {
-  const { setCurrentPage } = useApp()
+  const { userRole, currentUserId, navigateRoot } = useApp()
   const { projects, tasks, timeEntries } = useDemoStore()
 
   const upcomingTasks = tasks
@@ -273,7 +273,7 @@ export function DashboardPage() {
               <CardTitle className="text-base">Proyectos Activos</CardTitle>
               <CardDescription>Progreso de proyectos</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setCurrentPage("proyectos")}>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigateRoot("proyectos")}>
               Ver todos
               <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
@@ -296,7 +296,7 @@ export function DashboardPage() {
               <CardTitle className="text-base">Proximas Tareas</CardTitle>
               <CardDescription>Ordenadas por vencimiento</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" className="text-xs" onClick={() => setCurrentPage("tareas")}>
+            <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigateRoot("tareas")}>
               Ver todas
               <ArrowRight className="ml-1 h-3 w-3" />
             </Button>

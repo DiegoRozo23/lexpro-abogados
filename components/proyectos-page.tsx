@@ -64,6 +64,7 @@ import {
   type ProjectStatus,
   type Priority,
 } from "@/lib/demo-data"
+import { useApp } from "@/lib/app-context"
 import { useDemoStore } from "@/lib/demo-store"
 
 type SortOption = "vencimiento-asc" | "vencimiento-desc" | "prioridad-asc" | "prioridad-desc"
@@ -79,15 +80,19 @@ const emptyProject: Omit<Project, "id"> = {
   dueDate: new Date().toISOString().slice(0, 10),
   description: "",
   avance: "",
+  startDate: new Date().toISOString().slice(0, 10),
+  progress: 0,
+  budget: 0,
+  team: []
 }
 
 export function ProyectosPage() {
+  const { pushView } = useApp()
   const { projects, clients, tasks, addProject, updateProject, deleteProject } = useDemoStore()
   const [search, setSearch] = useState("")
   const [divisionFilter, setDivisionFilter] = useState<string>("all")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [sortBy, setSortBy] = useState<SortOption>("vencimiento-asc")
-  const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [form, setForm] = useState(emptyProject)
@@ -117,9 +122,6 @@ export function ProyectosPage() {
       }
     })
 
-  const detail = selectedProject ? projects.find((p) => p.id === selectedProject) : null
-  const detailTasks = detail ? tasks.filter((t) => t.projectId === detail.id) : []
-
   const handleDivisionChange = (val: string) => {
     setDivisionFilter(val)
     setCategoryFilter("all")
@@ -146,6 +148,10 @@ export function ProyectosPage() {
       expediente: project.expediente,
       description: project.description,
       avance: project.avance,
+      startDate: project.startDate,
+      progress: project.progress,
+      budget: project.budget,
+      team: project.team
     })
     setFormOpen(true)
   }
@@ -230,126 +236,67 @@ export function ProyectosPage() {
           const daysLeft = Math.ceil((new Date(project.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
 
           return (
-            <Dialog key={project.id} onOpenChange={(open) => open && setSelectedProject(project.id)}>
-              <DialogTrigger asChild>
-                <Card className="cursor-pointer transition-all hover:shadow-md" style={categoryBgColors[project.category]}>
-                  <CardHeader className="flex-row items-start justify-between gap-3 pb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${divisionColors[division]}`}>{division}</Badge>
-                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${categoryColors[project.category]}`}>{project.category}</Badge>
-                      </div>
-                      <CardTitle className="text-sm leading-snug">{project.name}</CardTitle>
-                    </div>
-                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 shrink-0 ${priorityColors[project.priority]}`}>{project.priority}</Badge>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-xs text-muted-foreground">{project.clientName}</p>
-                    {project.juzgado && (
-                      <div className="rounded-md bg-muted/60 p-2.5 text-xs space-y-0.5">
-                        <p className="text-muted-foreground">Juzgado: <span className="font-medium text-foreground">{project.juzgado}</span></p>
-                        <p className="text-muted-foreground">Expediente: <span className="font-medium text-foreground">{project.expediente}</span></p>
-                      </div>
-                    )}
-                    {project.avance && (
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Avance</p>
-                        <p className="text-xs text-muted-foreground line-clamp-2">{project.avance}</p>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div className="flex -space-x-2">
-                        {assigned.map((u) => (
-                          <Avatar key={u.id} className="h-7 w-7 border-2 border-card">
-                            <AvatarFallback className="text-[10px] bg-[hsl(216,50%,12%)]/10 text-[hsl(216,50%,12%)] font-semibold">{u.avatar}</AvatarFallback>
-                          </Avatar>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs">
-                        <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className={daysLeft <= 7 ? (daysLeft <= 3 ? "text-red-600 font-medium" : "text-amber-600 font-medium") : "text-muted-foreground"}>
-                          {new Date(project.dueDate).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </DialogTrigger>
 
-              {detail && detail.id === project.id && (
-                <DialogContent className="sm:max-w-lg">
-                  <DialogHeader>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="outline" className={divisionColors[divisionMap[detail.category]]}>{divisionMap[detail.category]}</Badge>
-                      <Badge variant="outline" className={categoryColors[detail.category]}>{detail.category}</Badge>
-                      <Badge variant="outline" className={priorityColors[detail.priority]}>{detail.priority}</Badge>
-                    </div>
-                    <DialogTitle className="text-lg">{detail.name}</DialogTitle>
-                    <DialogDescription>{detail.description}</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div><p className="text-muted-foreground text-xs">Cliente</p><p className="font-medium">{detail.clientName}</p></div>
-                      <div><p className="text-muted-foreground text-xs">Fecha Limite</p><p className="font-medium">{new Date(detail.dueDate).toLocaleDateString("es-MX", { day: "2-digit", month: "long", year: "numeric" })}</p></div>
-                      {detail.juzgado && (
-                        <>
-                          <div><p className="text-muted-foreground text-xs">Juzgado</p><p className="font-medium">{detail.juzgado}</p></div>
-                          <div><p className="text-muted-foreground text-xs">No. Expediente</p><p className="font-medium">{detail.expediente}</p></div>
-                        </>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium mb-2">Tareas ({detailTasks.length})</p>
-                      <div className="space-y-2 max-h-48 overflow-y-auto">
-                        {detailTasks.map((task) => (
-                          <div key={task.id} className="flex items-center justify-between rounded-md border p-2.5 text-sm">
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate text-xs">{task.title}</p>
-                              <p className="text-xs text-muted-foreground">{task.assignedToName}</p>
-                            </div>
-                            <Badge variant="outline" className={`text-xs ${statusColors[task.status]}`}>{task.status}</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Edit / Delete */}
-                    <div className="flex items-center gap-2 pt-2 border-t">
-                      <DialogClose asChild>
-                        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => openEdit(detail)}>
-                          <Pencil className="h-3.5 w-3.5" /> Editar
-                        </Button>
-                      </DialogClose>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" className="gap-1.5"><Trash2 className="h-3.5 w-3.5" /> Eliminar</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar proyecto?</AlertDialogTitle>
-                            <AlertDialogDescription>Se eliminara &quot;{detail.name}&quot;. Esta accion no se puede deshacer.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => { deleteProject(detail.id); setSelectedProject(null) }}>Eliminar</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+            <Card
+              key={project.id}
+              className="cursor-pointer transition-all hover:shadow-md hover:scale-[1.01]"
+              style={categoryBgColors[project.category]}
+              onClick={() => pushView({ name: "project-detail", params: { id: project.id }, title: project.name })}
+            >
+              <CardHeader className="flex-row items-start justify-between gap-3 pb-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${divisionColors[division]}`}>{division}</Badge>
+                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${categoryColors[project.category]}`}>{project.category}</Badge>
                   </div>
-                </DialogContent>
-              )}
-            </Dialog>
+                  <CardTitle className="text-sm leading-snug">{project.name}</CardTitle>
+                </div>
+                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 shrink-0 ${priorityColors[project.priority]}`}>{project.priority}</Badge>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">{project.clientName}</p>
+                {project.juzgado && (
+                  <div className="rounded-md bg-muted/60 p-2.5 text-xs space-y-0.5">
+                    <p className="text-muted-foreground">Juzgado: <span className="font-medium text-foreground">{project.juzgado}</span></p>
+                    <p className="text-muted-foreground">Expediente: <span className="font-medium text-foreground">{project.expediente}</span></p>
+                  </div>
+                )}
+                {project.avance && (
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Avance</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{project.avance}</p>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <div className="flex -space-x-2">
+                    {assigned.map((u) => (
+                      <Avatar key={u.id} className="h-7 w-7 border-2 border-card">
+                        <AvatarFallback className="text-[10px] bg-[hsl(216,50%,12%)]/10 text-[hsl(216,50%,12%)] font-semibold">{u.avatar}</AvatarFallback>
+                      </Avatar>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className={daysLeft <= 7 ? (daysLeft <= 3 ? "text-red-600 font-medium" : "text-amber-600 font-medium") : "text-muted-foreground"}>
+                      {new Date(project.dueDate).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )
         })}
-      </div>
+      </div >
 
-      {filtered.length === 0 && (
-        <Card>
-          <CardContent className="flex items-center justify-center py-12 text-muted-foreground">
-            No se encontraron proyectos con los filtros seleccionados.
-          </CardContent>
-        </Card>
-      )}
+      {
+        filtered.length === 0 && (
+          <Card>
+            <CardContent className="flex items-center justify-center py-12 text-muted-foreground">
+              No se encontraron proyectos con los filtros seleccionados.
+            </CardContent>
+          </Card>
+        )
+      }
 
       {/* Create / Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
@@ -446,6 +393,6 @@ export function ProyectosPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </div >
   )
 }

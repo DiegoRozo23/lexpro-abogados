@@ -3,19 +3,32 @@
 import { createContext, useContext, useState, type ReactNode } from "react"
 import type { UserRole } from "./demo-data"
 
-export type Page =
+export type ViewName =
   | "login"
   | "dashboard"
   | "proyectos"
+  | "project-detail"
   | "tareas"
   | "clientes"
   | "mi-panel"
   | "tiempos"
   | "notificaciones"
+  | "task-detail"
+
+export interface View {
+  name: ViewName
+  params?: any
+  title?: string
+}
 
 interface AppState {
-  currentPage: Page
-  setCurrentPage: (page: Page) => void
+  navStack: View[]
+  pushView: (view: View) => void
+  goBack: () => void
+  popTo: (index: number) => void
+  navigateRoot: (name: ViewName) => void
+  currentView: View
+
   isLoggedIn: boolean
   setIsLoggedIn: (v: boolean) => void
   userRole: UserRole
@@ -29,17 +42,37 @@ interface AppState {
 const AppContext = createContext<AppState | null>(null)
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [currentPage, setCurrentPage] = useState<Page>("login")
+  const [navStack, setNavStack] = useState<View[]>([{ name: "login" }])
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userRole, setUserRole] = useState<UserRole>("admin")
   const [currentUserId, setCurrentUserId] = useState("u1")
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  const pushView = (view: View) => {
+    setNavStack((prev) => [...prev, view])
+  }
+
+  const goBack = () => {
+    setNavStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))
+  }
+
+  const popTo = (index: number) => {
+    setNavStack((prev) => prev.slice(0, index + 1))
+  }
+
+  const navigateRoot = (name: ViewName) => {
+    setNavStack([{ name }])
+  }
+
   return (
     <AppContext.Provider
       value={{
-        currentPage,
-        setCurrentPage,
+        navStack,
+        pushView,
+        goBack,
+        popTo,
+        navigateRoot,
+        currentView: navStack[navStack.length - 1],
         isLoggedIn,
         setIsLoggedIn,
         userRole,

@@ -12,7 +12,7 @@ import {
   Bell,
   X,
 } from "lucide-react"
-import { useApp, type Page } from "@/lib/app-context"
+import { useApp, type ViewName } from "@/lib/app-context"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,7 +20,7 @@ import { users } from "@/lib/demo-data"
 import { useDemoStore } from "@/lib/demo-store"
 import { cn } from "@/lib/utils"
 
-const adminNavItems: { label: string; page: Page; icon: typeof LayoutDashboard }[] = [
+const adminNavItems: { label: string; page: ViewName; icon: typeof LayoutDashboard }[] = [
   { label: "Dashboard", page: "dashboard", icon: LayoutDashboard },
   { label: "Proyectos", page: "proyectos", icon: FolderKanban },
   { label: "Tareas", page: "tareas", icon: ListTodo },
@@ -28,14 +28,14 @@ const adminNavItems: { label: string; page: Page; icon: typeof LayoutDashboard }
   { label: "Registro de Tiempos", page: "tiempos", icon: Clock },
 ]
 
-const abogadoNavItems: { label: string; page: Page; icon: typeof LayoutDashboard }[] = [
+const abogadoNavItems: { label: string; page: ViewName; icon: typeof LayoutDashboard }[] = [
   { label: "Mi Panel", page: "mi-panel", icon: UserCircle },
   { label: "Tareas", page: "tareas", icon: ListTodo },
   { label: "Registro de Tiempos", page: "tiempos", icon: Clock },
 ]
 
 export function AppSidebar() {
-  const { currentPage, setCurrentPage, userRole, currentUserId, setIsLoggedIn, sidebarOpen, setSidebarOpen } = useApp()
+  const { currentView, userRole, currentUserId, setIsLoggedIn, sidebarOpen, setSidebarOpen, navigateRoot } = useApp()
   const { notifications } = useDemoStore()
   const navItems = userRole === "admin" ? adminNavItems : abogadoNavItems
   const currentUser = users.find((u) => u.id === currentUserId)!
@@ -43,7 +43,7 @@ export function AppSidebar() {
 
   const handleLogout = () => {
     setIsLoggedIn(false)
-    setCurrentPage("login")
+    navigateRoot("login")
     setSidebarOpen(false)
   }
 
@@ -88,12 +88,12 @@ export function AppSidebar() {
             {userRole === "admin" ? "Administracion" : "Mi Espacio"}
           </p>
           {navItems.map((item) => {
-            const isActive = currentPage === item.page
+            const isActive = currentView.name === item.page
             return (
               <button
                 key={item.page}
                 onClick={() => {
-                  setCurrentPage(item.page)
+                  navigateRoot(item.page)
                   setSidebarOpen(false)
                 }}
                 className={cn(
@@ -124,7 +124,7 @@ export function AppSidebar() {
             <button
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
               onClick={() => {
-                setCurrentPage("notificaciones")
+                navigateRoot("notificaciones")
                 setSidebarOpen(false)
               }}
             >

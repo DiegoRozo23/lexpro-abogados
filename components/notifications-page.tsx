@@ -13,8 +13,7 @@ import { es } from "date-fns/locale"
 
 export function NotificationsPage() {
     const { notifications, markAsRead, markAllAsRead } = useDemoStore()
-    const { setCurrentPage } = useApp()
-    const { userRole } = useApp()
+    const { userRole, navigateRoot } = useApp()
     const [filter, setFilter] = useState<"all" | "unread">("all")
 
     const filteredNotifications = notifications
@@ -73,7 +72,8 @@ export function NotificationsPage() {
                     filteredNotifications.map((notification) => (
                         <Card
                             key={notification.id}
-                            className={`transition-all hover:shadow-sm ${!notification.read ? "border-l-4 border-l-[hsl(40,60%,50%)] bg-muted/10" : ""}`}
+                            onClick={() => notification.linkTo && navigateRoot(notification.linkTo as any)}
+                            className={`transition-all hover:shadow-sm cursor-pointer ${!notification.read ? "border-l-4 border-l-[hsl(40,60%,50%)] bg-muted/10" : ""}`}
                         >
                             <CardContent className="p-4 flex gap-4 items-start">
                                 <div className={`mt-1 h-8 w-8 shrink-0 rounded-full flex items-center justify-center ${notification.type === "vencimiento" ? "bg-red-100 text-red-600" :
@@ -116,6 +116,6 @@ export function NotificationsPage() {
                     ))
                 )}
             </div>
-        </div>
+        </div >
     )
 }

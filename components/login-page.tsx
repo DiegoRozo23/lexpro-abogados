@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useApp } from "@/lib/app-context"
 
 export function LoginPage() {
-  const { setIsLoggedIn, setUserRole, setCurrentUserId, setCurrentPage } = useApp()
+  const { setIsLoggedIn, setUserRole, setCurrentUserId, navigateRoot } = useApp()
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -18,11 +18,11 @@ export function LoginPage() {
     if (role === "admin") {
       setUserRole("admin")
       setCurrentUserId("u1")
-      setCurrentPage("dashboard")
+      navigateRoot("dashboard")
     } else {
       setUserRole("abogado")
       setCurrentUserId("u3")
-      setCurrentPage("mi-panel")
+      navigateRoot("mi-panel")
     }
     setIsLoggedIn(true)
   }

@@ -13,6 +13,7 @@ import {
     type Task,
     type TimeEntry,
     type Notification,
+    type ProgressUpdate,
 } from "./demo-data"
 
 // ---------- helpers ----------
@@ -44,6 +45,7 @@ interface DemoStore {
     addTask: (t: Omit<Task, "id">) => void
     updateTask: (id: string, t: Partial<Task>) => void
     deleteTask: (id: string) => void
+    addProgressUpdate: (taskId: string, update: Omit<ProgressUpdate, "id">) => void
 
     // time entries
     addTimeEntry: (te: Omit<TimeEntry, "id">) => void
@@ -98,6 +100,17 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
         setTasks((prev) => prev.filter((x) => x.id !== id))
     }, [])
 
+    const addProgressUpdate = useCallback((taskId: string, update: Omit<ProgressUpdate, "id">) => {
+        setTasks((prev) => prev.map((t) => {
+            if (t.id === taskId) {
+                const newUpdate = { ...update, id: nextId("pu") }
+                const updates = t.progressUpdates ? [...t.progressUpdates, newUpdate] : [newUpdate]
+                return { ...t, progressUpdates: updates, avance: update.content }
+            }
+            return t
+        }))
+    }, [])
+
     // ---- Time Entries ----
     const addTimeEntry = useCallback((te: Omit<TimeEntry, "id">) => {
         setTimeEntries((prev) => [...prev, { ...te, id: nextId("te") }])
@@ -127,7 +140,7 @@ export function DemoStoreProvider({ children }: { children: ReactNode }) {
                 timeEntries: timeEntriesData,
                 addClient, updateClient, deleteClient,
                 addProject, updateProject, deleteProject,
-                addTask, updateTask, deleteTask,
+                addTask, updateTask, deleteTask, addProgressUpdate,
                 addTimeEntry, updateTimeEntry, deleteTimeEntry,
                 notifications: notificationsData, markAsRead, markAllAsRead,
             }}

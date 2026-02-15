@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Clock, AlertCircle, CheckCircle2, Circle, Timer, ArrowUpDown, Pencil, Trash2 } from "lucide-react"
+import { Search, Plus, Clock, AlertCircle, CheckCircle2, Circle, Timer, ArrowUpDown, Pencil, Trash2, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -74,8 +74,8 @@ const emptyTask: Omit<Task, "id"> = {
   avance: "",
 }
 
-export function TareasPage() {
-  const { userRole } = useApp()
+export function TareasPage({ projectId, isEmbedded }: { projectId?: string, isEmbedded?: boolean }) {
+  const { userRole, pushView } = useApp()
   const { tasks, projects, addTask, updateTask, deleteTask } = useDemoStore()
   const [search, setSearch] = useState("")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
@@ -83,10 +83,15 @@ export function TareasPage() {
   const [sortBy, setSortBy] = useState<SortOption>("vencimiento-asc")
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
-  const [form, setForm] = useState(emptyTask)
+
+  // Pre-fill projectId if embedded
+  const defaultTask = { ...emptyTask, projectId: projectId || "" }
+  const [form, setForm] = useState(defaultTask)
   const [detailTask, setDetailTask] = useState<Task | null>(null)
 
-  const filtered = tasks
+  const projectTasks = tasks.filter(t => !projectId || t.projectId === projectId)
+
+  const filtered = projectTasks
     .filter((t) => {
       const matchesSearch =
         t.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -112,7 +117,7 @@ export function TareasPage() {
 
   function openCreate() {
     setEditingTask(null)
-    setForm(emptyTask)
+    setForm(defaultTask)
     setFormOpen(true)
   }
 
@@ -157,31 +162,49 @@ export function TareasPage() {
 
   const abogados = users.filter((u) => u.role === "abogado")
 
+  const clearFilters = () => {
+    setSearch("")
+    setPriorityFilter("all")
+    setStatusTab("all")
+    setSortBy("vencimiento-asc")
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Tareas</h1>
-          <p className="text-muted-foreground">Seguimiento de todas las tareas</p>
+      {!isEmbedded && (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Tareas</h1>
+            <p className="text-muted-foreground">Seguimiento de todas las tareas</p>
+          </div>
+          {userRole === "admin" && (
+            <Button onClick={openCreate} className="gap-2 bg-[hsl(216,50%,12%)] text-[hsl(40,50%,90%)] hover:bg-[hsl(216,50%,18%)]">
+              <Plus className="h-4 w-4" />
+              Nueva Tarea
+            </Button>
+          )}
         </div>
-        {userRole === "admin" && (
-          <Button onClick={openCreate} className="gap-2 bg-[hsl(216,50%,12%)] text-[hsl(40,50%,90%)] hover:bg-[hsl(216,50%,18%)]">
+      )}
+
+      {isEmbedded && userRole === "admin" && (
+        <div className="flex justify-end">
+          <Button onClick={openCreate} size="sm" className="gap-2 bg-[hsl(216,50%,12%)] text-[hsl(40,50%,90%)] hover:bg-[hsl(216,50%,18%)]">
             <Plus className="h-4 w-4" />
             Nueva Tarea
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="flex flex-col gap-3 sm:flex-row flex-wrap items-center">
+        <div className="relative flex-1 min-w-[200px] w-full">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Buscar tareas..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
         <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Prioridad" /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-32"><SelectValue placeholder="Prioridad" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="all">Prioridad: Todas</SelectItem>
             <SelectItem value="Critica">Critica</SelectItem>
             <SelectItem value="Alta">Alta</SelectItem>
             <SelectItem value="Media">Media</SelectItem>
@@ -189,7 +212,7 @@ export function TareasPage() {
           </SelectContent>
         </Select>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-          <SelectTrigger className="w-full sm:w-52">
+          <SelectTrigger className="w-full sm:w-40">
             <ArrowUpDown className="mr-2 h-4 w-4" /><SelectValue placeholder="Ordenar" />
           </SelectTrigger>
           <SelectContent>
@@ -199,16 +222,21 @@ export function TareasPage() {
             <SelectItem value="prioridad-desc">Prioridad (menor)</SelectItem>
           </SelectContent>
         </Select>
+        {(search || priorityFilter !== "all" || statusTab !== "all") && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-foreground">
+            <X className="h-4 w-4 mr-1" /> Limpiar
+          </Button>
+        )}
       </div>
 
       {/* Status tabs */}
       <Tabs value={statusTab} onValueChange={setStatusTab}>
         <TabsList>
-          <TabsTrigger value="all">Todas ({tasks.length})</TabsTrigger>
-          <TabsTrigger value="Pendiente">Pendientes ({tasks.filter((t) => t.status === "Pendiente").length})</TabsTrigger>
-          <TabsTrigger value="En Progreso">En Progreso ({tasks.filter((t) => t.status === "En Progreso").length})</TabsTrigger>
-          <TabsTrigger value="Vencida">Vencidas ({tasks.filter((t) => t.status === "Vencida").length})</TabsTrigger>
-          <TabsTrigger value="Completada">Completadas ({tasks.filter((t) => t.status === "Completada").length})</TabsTrigger>
+          <TabsTrigger value="all">Todas ({projectTasks.length})</TabsTrigger>
+          <TabsTrigger value="Pendiente">Pendientes ({projectTasks.filter((t) => t.status === "Pendiente").length})</TabsTrigger>
+          <TabsTrigger value="En Progreso">En Progreso ({projectTasks.filter((t) => t.status === "En Progreso").length})</TabsTrigger>
+          <TabsTrigger value="Vencida">Vencidas ({projectTasks.filter((t) => t.status === "Vencida").length})</TabsTrigger>
+          <TabsTrigger value="Completada">Completadas ({projectTasks.filter((t) => t.status === "Completada").length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value={statusTab} className="mt-4">
@@ -231,7 +259,7 @@ export function TareasPage() {
                   <Card
                     key={task.id}
                     className={`transition-all hover:shadow-sm cursor-pointer ${isOverdue ? "border-red-200 bg-red-50/30" : ""}`}
-                    onClick={() => setDetailTask(task)}
+                    onClick={() => pushView({ name: "task-detail", params: { id: task.id }, title: task.title })}
                   >
                     <CardContent className="flex items-center gap-4 p-4">
                       <div className={`shrink-0 ${isOverdue ? "text-red-500" : task.status === "Completada" ? "text-emerald-500" : task.status === "En Progreso" ? "text-sky-600" : "text-muted-foreground"}`}>

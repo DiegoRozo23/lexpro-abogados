@@ -61,18 +61,27 @@ const emptyEntry: Omit<TimeEntry, "id"> = {
   description: "",
 }
 
-export function TiemposPage() {
+export function TiemposPage({ projectId, isEmbedded }: { projectId?: string, isEmbedded?: boolean }) {
   const { userRole, currentUserId } = useApp()
-  const { timeEntries, tasks, addTimeEntry, updateTimeEntry, deleteTimeEntry } = useDemoStore()
+  const { timeEntries, tasks, projects, addTimeEntry, updateTimeEntry, deleteTimeEntry } = useDemoStore()
   const [search, setSearch] = useState("")
   const [formOpen, setFormOpen] = useState(false)
   const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null)
+
+  // Pre-fill projectId if embedded (indirectly via task selection)
   const [form, setForm] = useState(emptyEntry)
 
-  const entries =
+  const allEntries =
     userRole === "admin"
       ? timeEntries
       : timeEntries.filter((te) => te.userId === currentUserId)
+
+  const entries = projectId
+    ? allEntries.filter(te => {
+      const task = tasks.find(t => t.id === te.taskId)
+      return task?.projectId === projectId || te.projectName === projects.find(p => p.id === projectId)?.name
+    })
+    : allEntries
 
   const filtered = entries.filter(
     (te) =>
@@ -142,57 +151,71 @@ export function TiemposPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Registro de Tiempos</h1>
-          <p className="text-muted-foreground">
-            {userRole === "admin" ? "Horas registradas por el equipo" : "Mis horas registradas"}
-          </p>
+      {!isEmbedded && (
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Registro de Tiempos</h1>
+            <p className="text-muted-foreground">
+              {userRole === "admin" ? "Horas registradas por el equipo" : "Mis horas registradas"}
+            </p>
+          </div>
+          {userRole === "abogado" && (
+            <Button onClick={openCreate} className="gap-2 bg-[hsl(216,50%,12%)] text-[hsl(40,50%,90%)] hover:bg-[hsl(216,50%,18%)]">
+              <Plus className="h-4 w-4" />
+              Registrar Horas
+            </Button>
+          )}
         </div>
-        {userRole === "abogado" && (
-          <Button onClick={openCreate} className="gap-2 bg-[hsl(216,50%,12%)] text-[hsl(40,50%,90%)] hover:bg-[hsl(216,50%,18%)]">
+      )}
+
+      {isEmbedded && (
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium">Historial de Horas</h3>
+          <Button onClick={openCreate} size="sm" className="gap-2 bg-[hsl(216,50%,12%)] text-[hsl(40,50%,90%)] hover:bg-[hsl(216,50%,18%)]">
             <Plus className="h-4 w-4" />
             Registrar Horas
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[hsl(216,50%,12%)]/10 text-[hsl(216,50%,12%)] shrink-0">
-              <Clock className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{totalHours}h</p>
-              <p className="text-xs text-muted-foreground">Total Horas</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
-              <DollarSign className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{billableHours}h</p>
-              <p className="text-xs text-muted-foreground">Facturables</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground shrink-0">
-              <Clock className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{nonBillableHours}h</p>
-              <p className="text-xs text-muted-foreground">No Facturables</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {!isEmbedded && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[hsl(216,50%,12%)]/10 text-[hsl(216,50%,12%)] shrink-0">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{totalHours}h</p>
+                <p className="text-xs text-muted-foreground">Total Horas</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
+                <DollarSign className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{billableHours}h</p>
+                <p className="text-xs text-muted-foreground">Facturables</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted text-muted-foreground shrink-0">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{nonBillableHours}h</p>
+                <p className="text-xs text-muted-foreground">No Facturables</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Admin: Per-user summary */}
       {userRole === "admin" && (
@@ -324,7 +347,10 @@ export function TiemposPage() {
               <Select value={form.taskId} onValueChange={(v) => setForm((f) => ({ ...f, taskId: v }))}>
                 <SelectTrigger><SelectValue placeholder="Seleccionar tarea" /></SelectTrigger>
                 <SelectContent>
-                  {tasks.map((t) => (<SelectItem key={t.id} value={t.id}>{t.title} - {t.projectName}</SelectItem>))}
+                  {tasks
+                    .filter(t => !projectId || t.projectId === projectId)
+                    .map((t) => (<SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>))
+                  }
                 </SelectContent>
               </Select>
             </div>
