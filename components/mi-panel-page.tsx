@@ -40,7 +40,7 @@ const statusIcon: Record<TaskStatus, typeof Circle> = {
 }
 
 export function MiPanelPage() {
-  const { currentUserId } = useApp()
+  const { currentUserId, navigateRoot, pushView } = useApp() // Added pushView
   const { tasks, timeEntries, projects } = useDemoStore()
   const currentUser = users.find((u) => u.id === currentUserId)!
 
@@ -66,7 +66,7 @@ export function MiPanelPage() {
   ].filter((d) => d.value > 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Mi Panel</h1>
         <p className="text-muted-foreground">Bienvenido, {currentUser.name.replace("Lic. ", "")}</p>
@@ -74,7 +74,7 @@ export function MiPanelPage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card>
+        <Card onClick={() => navigateRoot("tareas", { status: "Pendiente" })} className="cursor-pointer transition-transform hover:scale-[1.02]">
           <CardContent className="flex items-center gap-3 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 shrink-0">
               <ListTodo className="h-5 w-5" />
@@ -85,7 +85,7 @@ export function MiPanelPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card onClick={() => navigateRoot("tareas", { status: "Vencida" })} className="cursor-pointer transition-transform hover:scale-[1.02]">
           <CardContent className="flex items-center gap-3 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-700 shrink-0">
               <AlertTriangle className="h-5 w-5" />
@@ -96,7 +96,7 @@ export function MiPanelPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card onClick={() => navigateRoot("tiempos")} className="cursor-pointer transition-transform hover:scale-[1.02]">
           <CardContent className="flex items-center gap-3 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(216,50%,12%)]/10 text-[hsl(216,50%,12%)] shrink-0">
               <Clock className="h-5 w-5" />
@@ -107,7 +107,7 @@ export function MiPanelPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card onClick={() => navigateRoot("tiempos")} className="cursor-pointer transition-transform hover:scale-[1.02]">
           <CardContent className="flex items-center gap-3 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
               <CheckCircle2 className="h-5 w-5" />
@@ -138,7 +138,8 @@ export function MiPanelPage() {
               return (
                 <div
                   key={task.id}
-                  className={`flex items-center gap-3 rounded-lg border p-3.5 transition-colors hover:bg-muted/50 ${isOverdue ? "border-red-200 bg-red-50/30" : ""}`}
+                  onClick={() => pushView({ name: "task-detail", params: { id: task.id }, title: "Detalle de Tarea" })}
+                  className={`flex items-center gap-3 rounded-lg border p-3.5 transition-colors hover:bg-muted/50 cursor-pointer ${isOverdue ? "border-red-200 bg-red-50/30" : ""}`}
                 >
                   <div className={`shrink-0 ${isOverdue ? "text-red-500" : task.status === "En Progreso" ? "text-sky-600" : "text-muted-foreground"}`}>
                     <IconComponent className="h-[18px] w-[18px]" />
@@ -225,7 +226,12 @@ export function MiPanelPage() {
             {myProjects.map((project) => {
               const division = divisionMap[project.category]
               return (
-                <div key={project.id} className="rounded-lg border p-4 space-y-3" style={categoryBgColors[project.category]}>
+                <div
+                  key={project.id}
+                  onClick={() => pushView({ name: "project-detail", params: { id: project.id }, title: project.name })}
+                  className="rounded-lg border p-4 space-y-3 cursor-pointer transition-colors hover:bg-muted/50"
+                  style={categoryBgColors[project.category]}
+                >
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${divisionColors[division]}`}>
                       {division}

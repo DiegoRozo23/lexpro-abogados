@@ -14,6 +14,8 @@ export type ViewName =
   | "tiempos"
   | "notificaciones"
   | "task-detail"
+  | "project-tasks"
+  | "project-times"
 
 export interface View {
   name: ViewName
@@ -26,7 +28,7 @@ interface AppState {
   pushView: (view: View) => void
   goBack: () => void
   popTo: (index: number) => void
-  navigateRoot: (name: ViewName) => void
+  navigateRoot: (name: ViewName, params?: any) => void
   currentView: View
 
   isLoggedIn: boolean
@@ -60,8 +62,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setNavStack((prev) => prev.slice(0, index + 1))
   }
 
-  const navigateRoot = (name: ViewName) => {
-    setNavStack([{ name }])
+  const navigateRoot = (name: ViewName, params?: any) => {
+    setNavStack([{ name, params }])
   }
 
   return (

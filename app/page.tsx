@@ -16,6 +16,7 @@ import { ProjectDetailPage } from "@/components/project-detail-page"
 import { TaskDetailPage } from "@/components/task-detail-page"
 
 import { NotificationsPage } from "@/components/notifications-page"
+import { BreadcrumbNav } from "@/components/breadcrumb-nav"
 
 function AppContent() {
   const { isLoggedIn, currentView, setSidebarOpen } = useApp()
@@ -34,6 +35,8 @@ function AppContent() {
     notificaciones: <NotificationsPage />,
     "project-detail": <ProjectDetailPage id={currentView.params?.id} />,
     "task-detail": <TaskDetailPage id={currentView.params?.id} />,
+    "project-tasks": <TareasPage projectId={currentView.params?.projectId} />,
+    "project-times": <TiemposPage projectId={currentView.params?.projectId} />,
   }
 
   const pageTitles: Record<string, string> = {
@@ -66,6 +69,7 @@ function AppContent() {
           <h2 className="font-semibold">{currentView.title || pageTitles[currentView.name] || "LexPro"}</h2>
         </header>
         <div className="p-4 lg:p-8">
+          <BreadcrumbNav />
           {pageMap[currentView.name] || <DashboardPage />}
         </div>
       </main>

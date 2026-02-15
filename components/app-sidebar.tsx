@@ -23,14 +23,14 @@ import { cn } from "@/lib/utils"
 const adminNavItems: { label: string; page: ViewName; icon: typeof LayoutDashboard }[] = [
   { label: "Dashboard", page: "dashboard", icon: LayoutDashboard },
   { label: "Proyectos", page: "proyectos", icon: FolderKanban },
-  { label: "Tareas", page: "tareas", icon: ListTodo },
   { label: "Clientes", page: "clientes", icon: Users },
   { label: "Registro de Tiempos", page: "tiempos", icon: Clock },
 ]
 
 const abogadoNavItems: { label: string; page: ViewName; icon: typeof LayoutDashboard }[] = [
   { label: "Mi Panel", page: "mi-panel", icon: UserCircle },
-  { label: "Tareas", page: "tareas", icon: ListTodo },
+  { label: "Proyectos", page: "proyectos", icon: FolderKanban },
+  { label: "Mis Tareas", page: "tareas", icon: ListTodo },
   { label: "Registro de Tiempos", page: "tiempos", icon: Clock },
 ]
 

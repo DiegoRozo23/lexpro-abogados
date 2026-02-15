@@ -71,15 +71,16 @@ const emptyTask: Omit<Task, "id"> = {
   description: "",
   hoursLogged: 0,
   alerts: [],
+  progressUpdates: [],
   avance: "",
 }
 
 export function TareasPage({ projectId, isEmbedded }: { projectId?: string, isEmbedded?: boolean }) {
-  const { userRole, pushView } = useApp()
+  const { userRole, pushView, currentView } = useApp()
   const { tasks, projects, addTask, updateTask, deleteTask } = useDemoStore()
   const [search, setSearch] = useState("")
   const [priorityFilter, setPriorityFilter] = useState<string>("all")
-  const [statusTab, setStatusTab] = useState("all")
+  const [statusTab, setStatusTab] = useState(currentView?.params?.status || "all")
   const [sortBy, setSortBy] = useState<SortOption>("vencimiento-asc")
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
@@ -135,6 +136,7 @@ export function TareasPage({ projectId, isEmbedded }: { projectId?: string, isEm
       description: task.description,
       hoursLogged: task.hoursLogged,
       alerts: task.alerts,
+      progressUpdates: task.progressUpdates || [],
       avance: task.avance || "",
     })
     setFormOpen(true)
@@ -150,6 +152,7 @@ export function TareasPage({ projectId, isEmbedded }: { projectId?: string, isEm
       projectName: project?.name || form.projectName,
       assignedToName: user ? user.name : form.assignedToName,
       avance: form.avance || "",
+      progressUpdates: form.progressUpdates || [],
     }
     if (editingTask) {
       updateTask(editingTask.id, finalForm)

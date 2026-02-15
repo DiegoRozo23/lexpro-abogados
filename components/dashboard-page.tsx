@@ -115,7 +115,7 @@ function ProjectRow({ project }: { project: Project }) {
 }
 
 export function DashboardPage() {
-  const { userRole, currentUserId, navigateRoot } = useApp()
+  const { userRole, currentUserId, navigateRoot, pushView } = useApp() // Added pushView
   const { projects, tasks, timeEntries } = useDemoStore()
 
   const upcomingTasks = tasks
@@ -138,7 +138,7 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in">
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard Gerencial</h1>
@@ -147,35 +147,43 @@ export function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Proyectos Activos"
-          value={dashboardStats.activeProjects}
-          subtitle={`${dashboardStats.totalProjects} total`}
-          icon={FolderKanban}
-          color="bg-[hsl(216,50%,12%)]/10 text-[hsl(216,50%,12%)]"
-        />
-        <StatCard
-          title="Tareas Pendientes"
-          value={dashboardStats.pendingTasks}
-          subtitle={`${dashboardStats.criticalTasks} criticas`}
-          icon={ListTodo}
-          color="bg-amber-100 text-amber-700"
-        />
-        <StatCard
-          title="Tareas Vencidas"
-          value={dashboardStats.overdueTasks}
-          subtitle="Requieren atencion"
-          icon={AlertTriangle}
-          color="bg-red-100 text-red-700"
-        />
-        <StatCard
-          title="Horas esta Semana"
-          value={dashboardStats.hoursThisWeek}
-          subtitle={`${dashboardStats.billableHours} facturables`}
-          icon={Clock}
-          trend="+12%"
-          color="bg-emerald-100 text-emerald-700"
-        />
+        <div onClick={() => navigateRoot("proyectos", { status: "Activo" })} className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatCard
+            title="Proyectos Activos"
+            value={dashboardStats.activeProjects}
+            subtitle={`${dashboardStats.totalProjects} total`}
+            icon={FolderKanban}
+            color="bg-[hsl(216,50%,12%)]/10 text-[hsl(216,50%,12%)]"
+          />
+        </div>
+        <div onClick={() => navigateRoot("tareas", { status: "Pendiente" })} className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatCard
+            title="Tareas Pendientes"
+            value={dashboardStats.pendingTasks}
+            subtitle={`${dashboardStats.criticalTasks} criticas`}
+            icon={ListTodo}
+            color="bg-amber-100 text-amber-700"
+          />
+        </div>
+        <div onClick={() => navigateRoot("tareas", { status: "Vencida" })} className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatCard
+            title="Tareas Vencidas"
+            value={dashboardStats.overdueTasks}
+            subtitle="Requieren atencion"
+            icon={AlertTriangle}
+            color="bg-red-100 text-red-700"
+          />
+        </div>
+        <div onClick={() => navigateRoot("tiempos")} className="cursor-pointer transition-transform hover:scale-[1.02]">
+          <StatCard
+            title="Horas esta Semana"
+            value={dashboardStats.hoursThisWeek}
+            subtitle={`${dashboardStats.billableHours} facturables`}
+            icon={Clock}
+            trend="+12%"
+            color="bg-emerald-100 text-emerald-700"
+          />
+        </div>
       </div>
 
       {/* Charts Row */}
@@ -284,7 +292,9 @@ export function DashboardPage() {
               .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
               .slice(0, 5)
               .map((project) => (
-                <ProjectRow key={project.id} project={project} />
+                <div key={project.id} onClick={() => pushView({ name: "project-detail", params: { id: project.id }, title: project.name })} className="cursor-pointer">
+                  <ProjectRow project={project} />
+                </div>
               ))}
           </CardContent>
         </Card>
@@ -307,7 +317,8 @@ export function DashboardPage() {
               return (
                 <div
                   key={task.id}
-                  className="flex items-center gap-3 rounded-lg border p-3.5 transition-colors hover:bg-muted/50"
+                  onClick={() => pushView({ name: "task-detail", params: { id: task.id }, title: "Detalle de Tarea" })}
+                  className="flex items-center gap-3 rounded-lg border p-3.5 transition-colors hover:bg-muted/50 cursor-pointer"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

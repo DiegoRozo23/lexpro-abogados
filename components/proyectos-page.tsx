@@ -87,7 +87,7 @@ const emptyProject: Omit<Project, "id"> = {
 }
 
 export function ProyectosPage() {
-  const { pushView } = useApp()
+  const { pushView, userRole, currentUserId, currentView } = useApp()
   const { projects, clients, tasks, addProject, updateProject, deleteProject } = useDemoStore()
   const [search, setSearch] = useState("")
   const [divisionFilter, setDivisionFilter] = useState<string>("all")
@@ -97,7 +97,13 @@ export function ProyectosPage() {
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [form, setForm] = useState(emptyProject)
 
-  const filtered = projects
+  const relevantProjects = userRole === "admin"
+    ? projects
+    : projects.filter(p => p.assignedTo.includes(currentUserId))
+
+  const [statusFilter, setStatusFilter] = useState<string>(currentView?.params?.status || "all")
+
+  const filtered = relevantProjects
     .filter((p) => {
       const matchesSearch =
         p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -105,7 +111,8 @@ export function ProyectosPage() {
       const division = divisionMap[p.category]
       const matchesDivision = divisionFilter === "all" || division === divisionFilter
       const matchesCategory = categoryFilter === "all" || p.category === categoryFilter
-      return matchesSearch && matchesDivision && matchesCategory
+      const matchesStatus = statusFilter === "all" || p.status === statusFilter
+      return matchesSearch && matchesDivision && matchesCategory && matchesStatus
     })
     .sort((a, b) => {
       switch (sortBy) {
@@ -125,6 +132,14 @@ export function ProyectosPage() {
   const handleDivisionChange = (val: string) => {
     setDivisionFilter(val)
     setCategoryFilter("all")
+  }
+
+  const clearFilters = () => {
+    setSearch("")
+    setDivisionFilter("all")
+    setCategoryFilter("all")
+    setStatusFilter("all")
+    setSortBy("vencimiento-asc")
   }
 
   function openCreate() {
@@ -215,8 +230,17 @@ export function ProyectosPage() {
             )}
           </SelectContent>
         </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-40"><SelectValue placeholder="Estatus" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Estatus: Todos</SelectItem>
+            <SelectItem value="Activo">Activo</SelectItem>
+            <SelectItem value="En Espera">En Espera</SelectItem>
+            <SelectItem value="Completado">Completado</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-          <SelectTrigger className="w-full sm:w-52">
+          <SelectTrigger className="w-full sm:w-40">
             <ArrowUpDown className="mr-2 h-4 w-4" /><SelectValue placeholder="Ordenar" />
           </SelectTrigger>
           <SelectContent>
@@ -226,6 +250,11 @@ export function ProyectosPage() {
             <SelectItem value="prioridad-desc">Prioridad (menor)</SelectItem>
           </SelectContent>
         </Select>
+        {(search || divisionFilter !== "all" || categoryFilter !== "all" || statusFilter !== "all") && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-foreground">
+            Limpiar
+          </Button>
+        )}
       </div>
 
       {/* Project Grid */}
